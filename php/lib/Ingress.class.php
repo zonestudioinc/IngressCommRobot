@@ -391,10 +391,7 @@ class Ingress
                 return $matchs[0];
             }
         }
-        if (empty($match)) {
-            return false;
-        }
-        return $match[0];
+        return false;
     }
     //Get message
     public function get_msg()
