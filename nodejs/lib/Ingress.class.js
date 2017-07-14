@@ -214,65 +214,22 @@
             let header = {};
             let data = {},
                 login_data = {};
-            data.Email = this.conf.email;
-            login_data.Email = this.conf.email;
-            login_data.Passwd = this.conf.password;
+
 
             let check_islogin = (body) => {
                 return !((/(登录|login)/gim).test(body));
             };
             let google_login = (data) => {
                 let $ = cheerio.load(data);
-                $('form input[name]').each((i, item) => {
-                    switch ($(item).attr('name')) {
-                        case 'Page':
-                            login_data.Page = $(item).val();
-                            break;
-                        case 'GALX':
-                            login_data.GALX = $(item).val();
-                            break;
-                        case 'gxf':
-                            login_data.gxf = $(item).val();
-                            break;
-                        case 'continue':
-                            login_data.continue = $(item).val();
-                            break;
-                        case 'service':
-                            login_data.service = $(item).val();
-                            break;
-                        case 'ltmpl':
-                            login_data.ltmpl = $(item).val();
-                            break;
-                        case 'rip':
-                            login_data.rip = $(item).val();
-                            break;
-                        case 'ProfileInformation':
-                            login_data.ProfileInformation = $(item).val();
-                            break;
-                        case 'SessionState':
-                            login_data.SessionState = $(item).val();
-                            break;
-                        case '_utf8':
-                            login_data._utf8 = $(item).val();
-                            break;
-                        case 'bgresponse':
-                            login_data.bgresponse = $(item).val();
-                            break;
-                        case 'signIn':
-                            login_data.signIn = $(item).val();
-                            break;
-                        case 'PersistentCookie':
-                            login_data.PersistentCookie = $(item).val();
-                            break;
-                        case 'rmShown':
-                            login_data.rmShown = $(item).val();
-                            break;
-                    }
-                });
                 let password_url = 'https://accounts.google.com/signin/challenge/sl/password';
                 $('form[action]').each((i, item) => {
                     password_url = $(item).attr('action');
+                    $(item).find('input[name][value]:not(:disabled)').each((i, item) => {
+                        login_data[$(item).attr('name')] = $(item).val();
+                    });
                 });
+                login_data.Email = this.conf.email;
+                login_data.Passwd = this.conf.password;
                 this.curl(password_url, login_data, header, (er, re, dat) => {
                     if (!er && re.statusCode == 200) {
                         if (check_islogin(dat)) {
@@ -287,68 +244,14 @@
             };
             let checkemail = (d) => {
                 let $ = cheerio.load(d);
-                $('form input[name]').each((i, item) => {
-                    switch ($(item).attr('name')) {
-                        case 'Page':
-                            data.Page = $(item).val();
-                            break;
-                        case 'GALX':
-                            data.GALX = $(item).val();
-                            break;
-                        case 'gxf':
-                            data.gxf = $(item).val();
-                            break;
-                        case 'continue':
-                            data.continue = $(item).val();
-                            break;
-                        case 'service':
-                            data.service = $(item).val();
-                            break;
-                        case 'ltmpl':
-                            data.ltmpl = $(item).val();
-                            break;
-                        case 'rip':
-                            data.rip = $(item).val();
-                            break;
-                        case 'ProfileInformation':
-                            data.ProfileInformation = $(item).val();
-                            break;
-                        case 'SessionState':
-                            data.SessionState = $(item).val();
-                            break;
-                        case '_utf8':
-                            data._utf8 = $(item).val();
-                            break;
-                        case 'bgresponse':
-                            data.bgresponse = $(item).val();
-                            break;
-                        case 'identifiertoken':
-                            data.identifiertoken = $(item).val();
-                            break;
-                        case 'identifiertoken_audio':
-                            data.identifiertoken_audio = $(item).val();
-                            break;
-                        case 'identifier-captcha-input':
-                            data['identifier-captcha-input'] = $(item).val();
-                            break;
-                        case 'signIn':
-                            data.signIn = $(item).val();
-                            break;
-                        case 'Passwd':
-                            data.Passwd = $(item).val();
-                            break;
-                        case 'PersistentCookie':
-                            data.PersistentCookie = $(item).val();
-                            break;
-                        case 'rmShown':
-                            data.rmShown = $(item).val();
-                            break;
-                    }
-                });
                 let username_xhr_url = 'https://accounts.google.com/signin/v1/lookup';
                 $('form[action]').each((i, item) => {
                     username_xhr_url = $(item).attr('action');
+                    $(item).find('input[name][value]:not(:disabled)').each((i, item) => {
+                        data[$(item).attr('name')] = $(item).val();
+                    });
                 });
+                data.Email = this.conf.email;
                 this.curl(username_xhr_url, data, header, (er, re, dat) => {
                     if (!er && re.statusCode == 200) {
                         header.Referer = re.request.uri.href;
@@ -493,7 +396,7 @@
                         try {
                             this.db.serialize(() => {
                                 let stmt = this.db.prepare('SELECT COUNT(`id`) AS num FROM `user` WHERE `agent`=?');
-                                result.forEach(function(item){
+                                result.forEach(function(item) {
                                     CheckNewAgent(stmt, item[2].plext.text);
                                 });
                                 // 处理完成执行
@@ -501,7 +404,7 @@
                                     let time = new Date(),
                                         st = '',
                                         newagentarr = [];
-                                    agents.forEach(function(item){
+                                    agents.forEach(function(item) {
                                         st += '@' + item + '  ';
                                         newagentarr.push('("' + item + '", ' + time.getTime() + ')');
                                     });

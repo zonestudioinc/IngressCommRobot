@@ -46,7 +46,7 @@ class Ingress
             'Accept' => 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language' => 'Accept-Language: zh-CN,zh;q=0.8,en;q=0.6',
             'Dnt' => 'Dnt: 1',
-            'Accept-encoding' => 'Accept-encoding: gzip'
+            'Accept-encoding' => 'Accept-encoding: gzip',
         ];
         $this->usertoken = $this->get_usertoken();
         // 设置csrf
@@ -83,7 +83,7 @@ class Ingress
                 CURLOPT_RETURNTRANSFER => true, //Set Not Show Response Headers
                 CURLOPT_HEADER => false, //Set Not Output Header
                 CURLOPT_NOBODY => false, //Set Not Show Body
-                CURLOPT_ENCODING => "gzip" // Set Accept-encoding
+                CURLOPT_ENCODING => "gzip", // Set Accept-encoding
             ]
         );
         if ($post !== null) {
@@ -242,75 +242,19 @@ class Ingress
         // 抓取输入账号页面页面
         // 解析dom
         $html->load($info['info']);
-        $main = $html->find('form input[name]');
-        $data = [
-            'Email' => $this->conf['email'],
-        ];
-        foreach ($main as $value) {
-            switch ($value->name) {
-                case 'Page':
-                    $data['Page'] = $value->value;
-                    break;
-                case 'GALX':
-                    $data['GALX'] = $value->value;
-                    break;
-                case 'gxf':
-                    $data['gxf'] = $value->value;
-                    break;
-                case 'continue':
-                    $data['continue'] = $value->value;
-                    break;
-                case 'service':
-                    $data['service'] = $value->value;
-                    break;
-                case 'ltmpl':
-                    $data['ltmpl'] = $value->value;
-                    break;
-                case 'rip':
-                    $data['rip'] = $value->value;
-                    break;
-                case 'ProfileInformation':
-                    $data['ProfileInformation'] = $value->value;
-                    break;
-                case 'SessionState':
-                    $data['SessionState'] = $value->value;
-                    break;
-                case '_utf8':
-                    $data['_utf8'] = $value->value;
-                    break;
-                case 'bgresponse':
-                    $data['bgresponse'] = $value->value;
-                    break;
-                case 'identifiertoken':
-                    $data['identifiertoken'] = $value->value;
-                    break;
-                case 'identifiertoken_audio':
-                    $data['identifiertoken_audio'] = $value->value;
-                    break;
-                case 'identifier-captcha-input':
-                    $data['identifier-captcha-input'] = $value->value;
-                    break;
-                case 'signIn':
-                    $data['signIn'] = $value->value;
-                    break;
-                case 'Passwd':
-                    $data['Passwd'] = $value->value;
-                    break;
-                case 'PersistentCookie':
-                    $data['PersistentCookie'] = $value->value;
-                    break;
-                case 'rmShown':
-                    $data['rmShown'] = $value->value;
-                    break;
-            }
-        }
         $form = $html->find('form[action]');
+        $data = [];
         // 备用
         $username_xhr_url = 'https://accounts.google.com/signin/v1/lookup';
-        foreach ($form as $key => $value) {
+        foreach ($form as $value) {
             $username_xhr_url = $value->action;
+            $input = $value->find('input[name][value]');
+            foreach ($input as $_input) {
+                $data[$_input->name] = $_input->value;
+            }
         }
         $header['Referer'] = 'Referer: ' . $info['header']['url'];
+        $data['Email'] = $this->conf['email'];
         $_ = $this->curl($username_xhr_url, $data, $header);
         if ($_['status'] != 200) {
             $this->ShowError('Check User Email Error');
@@ -318,64 +262,20 @@ class Ingress
         }
         // 登录
         $html->load($_['info']);
-        $login_page = $html->find('form input[name]');
-        $login_data = [
-            'Email' => $this->conf['email'],
-            'Passwd' => $this->conf['password'],
-        ];
-        foreach ($login_page as $value) {
-            switch ($value->name) {
-                case 'Page':
-                    $login_data['Page'] = $value->value;
-                    break;
-                case 'GALX':
-                    $login_data['GALX'] = $value->value;
-                    break;
-                case 'gxf':
-                    $login_data['gxf'] = $value->value;
-                    break;
-                case 'continue':
-                    $login_data['continue'] = $value->value;
-                    break;
-                case 'service':
-                    $login_data['service'] = $value->value;
-                    break;
-                case 'ltmpl':
-                    $login_data['ltmpl'] = $value->value;
-                    break;
-                case 'rip':
-                    $login_data['rip'] = $value->value;
-                    break;
-                case 'ProfileInformation':
-                    $login_data['ProfileInformation'] = $value->value;
-                    break;
-                case 'SessionState':
-                    $login_data['SessionState'] = $value->value;
-                    break;
-                case '_utf8':
-                    $login_data['_utf8'] = $value->value;
-                    break;
-                case 'bgresponse':
-                    $login_data['bgresponse'] = $value->value;
-                    break;
-                case 'signIn':
-                    $login_data['signIn'] = $value->value;
-                    break;
-                case 'PersistentCookie':
-                    $login_data['PersistentCookie'] = $value->value;
-                    break;
-                case 'rmShown':
-                    $login_data['rmShown'] = $value->value;
-                    break;
-            }
-        }
+        $login_data = [];
         $form = $html->find('form[action]');
         // 备用
         $password_url = 'https://accounts.google.com/signin/challenge/sl/password';
-        foreach ($form as $key => $value) {
+        foreach ($form as $value) {
             $password_url = $value->action;
+            $input = $value->find('input[name][value]');
+            foreach ($input as $_input) {
+                $login_data[$_input->name] = $_input->value;
+            }
         }
         $header['Referer'] = 'Referer: ' . $_['header']['url'];
+        $login_data['Email'] = $this->conf['email'];
+        $login_data['Passwd'] = $this->conf['password'];
         $info = $this->curl($password_url, $login_data, $header);
         if ($this->check_login($info['info'])) {
             return true;
@@ -511,13 +411,13 @@ class Ingress
     private function rand_msg()
     {
         if (empty($this->conf['rand_msg'])) {
-            $data = array(
+            $data = [
                 ' 欢迎新人，快来加入川渝蓝军群(群号126821831)，发现精彩内容。',
                 ' 欢迎选择加入抵抗军·川渝蓝军群(群号126821831)，一起为建设社会主义社会、实现人类的全面自由发展而奋斗吧。',
                 ' 您已进入秋名山路段，此处常有老司机出没，加入川渝蓝军群(群号126821831)，寻找这里的老司机吧。',
                 ' 欢迎加入熊猫抵抗军(群号126821831)，感谢你在与shapers的斗争中选择了人性与救赎，选择与死磕并肩同行。新人你好，我是死磕。',
                 ' ingrees亚洲 中国分区 川渝地区组织需要你！快来加入川渝蓝军群(群号126821831)。',
-            );
+            ];
         } else {
             $data = $this->conf['rand_msg'];
         }
