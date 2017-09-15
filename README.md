@@ -64,7 +64,19 @@ run
 ```python
 python run.py
 ```
+### Tips: Bin
 
+Linux:
+
+```sh
+$ chmod +x Ingress & ./Ingress
+```
+
+Windows:
+
+```bat
+.\Ingress.exe
+```
 
 ---------------------------------------
 ### Configuration Information:
